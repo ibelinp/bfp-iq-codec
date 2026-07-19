@@ -72,8 +72,16 @@ def _unpack(plane: bytes, idx: int, bits: int) -> int:
     return (raw ^ sign) - sign
 
 
-def encode_block(fmt: BfpFormat, samples) -> bytes:
-    """Encode N complex samples (nominally within +-1.0) into one BFP block."""
+def encode_block(fmt: BfpFormat, samples, fill: str = "ceil") -> bytes:
+    """Encode N complex samples (nominally within +-1.0) into one BFP block.
+
+    fill selects the exponent rule (see README, "the fill-rule knob"):
+      "ceil"  - smallest exponent that guarantees no clip. Safe; under-fills the
+                mantissa by up to 6 dB (~3 dB on average).
+      "round" - place the peak near full-scale to recover most of that ~3 dB.
+                Can clip a few near-peak samples at wide mantissas, so the clamp
+                below matters; at 8 bits it can end up worse than "ceil".
+    """
     if len(samples) != fmt.block_size:
         raise ValueError("expected exactly block_size samples")
 
@@ -83,8 +91,9 @@ def encode_block(fmt: BfpFormat, samples) -> bytes:
 
     m_max = fmt.mantissa_max
     if peak > 0.0:
-        # Smallest exponent whose mantissa range covers the peak without clip.
-        exponent = max(-128, min(127, math.ceil(math.log2(peak / m_max))))
+        raw = math.log2(peak / m_max)
+        e = math.ceil(raw) if fill == "ceil" else round(raw)
+        exponent = max(-128, min(127, e))
     else:
         exponent = -128                       # all-zero block sentinel
 

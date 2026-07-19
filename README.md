@@ -286,6 +286,40 @@ different:
 Recommendation for streaming IQ to thin clients: **well-tuned BFP as the
 default.** Competitive quality, cheapest decode, independent blocks.
 
+### Measured: BFP vs. block scaling
+
+Block scaling is the alternative most worth taking seriously, so here are real
+numbers. [`reference/compare.py`](reference/compare.py) quantizes a few signals
+both ways and prints the SNR. It gives block scaling every advantage — an
+idealized, full-precision linear scale factor that a real fixed-point
+implementation wouldn't have — so these figures are the *best case* for block
+scaling. The table below is the gap (block scaling minus well-filled BFP), in
+dB; positive means block scaling is ahead:
+
+| signal | 4-bit | 5-bit | 6-bit |
+|---|---|---|---|
+| low dynamic range (band noise) | −0.9 | −0.4 | +1.4 |
+| high DR (strong + weak, 45 dB apart) | +1.7 | +1.5 | +0.5 |
+| high DR (two tones + noise floor) | +1.9 | +2.3 | +2.8 |
+
+So at the bit depths you'd actually stream (4–6), block scaling wins by roughly
+**0 to 3 dB**, and on genuinely low-dynamic-range IQ it's a wash or BFP edges
+ahead. That's the *flattered* margin. For it you pay a multiply per sample on
+decode instead of a shift, plus the logic to quantize and carry a linear scale
+factor. On the decimated, band-limited IQ that SDR channels actually produce —
+which is low dynamic range by construction — it isn't worth it.
+
+(One caveat the script also surfaces: at 8 bits the naive round-fill BFP can
+clip and score *worse* than the safe `ceil` fill. That's the fill-rule gotcha
+from earlier, not a block-scaling win. Use `ceil`, or a clip-bounded tuned
+fill, at wide mantissas.)
+
+Where block scaling does earn its place: high-peak-to-average wideband IQ
+(dense multi-carrier, high-order QAM), where BFP's power-of-two step crushes the
+small samples. If that's your data, benchmark a *faithful* (scale-quantized)
+block scaling against tuned BFP on your own captures before committing to the
+costlier decode.
+
 ## Reference implementation
 
 [`reference/bfp.py`](reference/bfp.py) is a dependency-free Python encoder and
@@ -302,6 +336,14 @@ is straightforward — the encoder is a peak scan plus a pack loop, and the
 decoder is an unpack loop plus one multiply. If you build a port, the two
 things to get exactly right for interop are the LSB-first bit packing and the
 planar (all-I-then-all-Q) layout.
+
+[`reference/compare.py`](reference/compare.py) is the BFP-vs-block-scaling
+harness behind the numbers above. It also contains a short, readable block
+scaling implementation if you want to see the alternative side by side:
+
+```
+python3 reference/compare.py
+```
 
 ## License
 
