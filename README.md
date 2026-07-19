@@ -350,3 +350,8 @@ python3 reference/compare.py
 MIT. See [LICENSE](LICENSE). Use it, ship it, port it. If it saves someone from
 reinventing this or from reaching for a heavier codec than they need, it did its
 job.
+
+(A note on patents, since people ask: block floating point is decades-old,
+textbook DSP — fixed-point FFT hardware used it in the 1960s–70s — so the general
+technique is prior art, not anyone's to own. This is a plain reference
+implementation of it. Not legal advice.)
