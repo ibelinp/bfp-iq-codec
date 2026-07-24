@@ -162,16 +162,18 @@ uniform-quantizer figure, relative to the block's own peak:
 SQNR ≈ 6.02·b + 1.76 dB
 ```
 
-Reasonable starting points:
+Reasonable starting points. Bytes per complex sample is `b/4 + 1/N` — the two
+mantissas plus this block's share of the exponent byte — shown here for the
+common N = 256:
 
-| b (bits) | ~SQNR | bytes/sample | Good for |
+| b (bits) | ~SQNR | bytes/sample (N=256) | Good for |
 |---|---|---|---|
-| 3 | ~20 dB | 0.875 | wide panorama / display, fidelity not critical |
-| 4 | ~26 dB | 1.125 | wideband, RAW capture |
-| 5 | ~32 dB | 1.25 | general voice: SSB, NFM, AM |
-| 6 | ~38 dB | 1.5 | weak-signal work: CW, digital modes |
-| 8 | ~50 dB | 2.0 | when you want the display floor to show the real filter skirts |
-| 12 | ~74 dB | 3.0 | near-transparent for a 12-bit-ADC front end |
+| 3 | ~20 dB | 0.754 | wide panorama / display, fidelity not critical |
+| 4 | ~26 dB | 1.004 | wideband, RAW capture |
+| 5 | ~32 dB | 1.254 | general voice: SSB, NFM, AM |
+| 6 | ~38 dB | 1.504 | weak-signal work: CW, digital modes |
+| 8 | ~50 dB | 2.004 | when you want the display floor to show the real filter skirts |
+| 12 | ~74 dB | 3.004 | near-transparent for a 12-bit-ADC front end |
 
 The 3…12 range covers everything from "just show me where the signals are" to
 "don't touch my weak DX." Below 3 bits the mantissa can't hold a sign plus
