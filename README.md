@@ -223,6 +223,45 @@ SQNR has to comfortably exceed that — which may call for more bits than
 weak-signal *reception* alone would suggest. Reception quality and display
 floor are two different budgets.
 
+### What that looks like
+
+The same 25 MS/s slice of the FM broadcast band, recorded three times a minute
+apart at three mantissa widths. Same USRP B210, same antenna, and — this is the
+part that makes the comparison worth anything — the display's reference level
+and dB/div were left untouched between the three. Nothing is rescaled to
+flatter the low-bit case.
+
+![b=8: noise floor near −104 dBFS](images/fm-band-8-bit-pairs.jpg)
+
+**b = 8** — 2.00 bytes/sample. Floor around −104 dBFS. That floor is the
+receiver's, not the codec's: quantization noise is below it and contributes
+nothing you can see.
+
+![b=6: noise floor near −97 dBFS](images/fm-band-6-bit-pairs.jpg)
+
+**b = 6** — 1.50 bytes/sample. Floor around −97 dBFS.
+
+![b=4: noise floor near −83 dBFS](images/fm-band-4-bit-pairs.jpg)
+
+**b = 4** — 1.00 bytes/sample. Floor around −83 dBFS.
+
+The strong carriers sit at the same levels in all three; only the floor climbs.
+Note that 8 → 6 lifts it about 7 dB while 6 → 4 lifts it about 14: the first
+step is partly hidden because at b = 8 the quantization noise is still under the
+receiver's own noise, so you are watching it emerge rather than move. What the
+rising floor does cost you is the weak end — the stations near −100 dBFS below
+92 MHz are legible in the first image and gone by the third. That is the trade,
+stated honestly: you choose where the floor sits.
+
+![The same 4-bit recording with the reference level set to suit it](images/fm-band-4-bit-pairs-ref-adjusted.jpg)
+
+Same 4-bit file as above, with the display reference level moved to where it
+belongs for that recording. One byte per sample, and it demodulates WFM with
+RDS pulling the station ID and the track title.
+
+For scale, a 500 MB file at 25 MS/s holds 5.0 s at b = 16, 10.0 s at b = 8,
+13.3 s at b = 6, and 19.9 s at b = 4.
+
 ## The fill-rule knob (worth ~3 dB)
 
 The `ceil` exponent is safe but under-fills the mantissa: the peak lands
