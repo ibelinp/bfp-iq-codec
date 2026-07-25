@@ -1,4 +1,4 @@
-# bfp-iq
+# bfp-iq-codec
 
 Block Floating Point compression for complex IQ streams. It's a small, fast,
 loss-tolerant way to cut SDR IQ data roughly in half (or better) without an
@@ -107,6 +107,14 @@ block_bytes = 1 + 2·160        = 321 bytes  for 256 complex samples
 Against 16-bit complex (4 bytes/sample) that's a 3.2× reduction, and against
 8-bit complex (2 bytes/sample) it's still 1.6×, with the exponent buying back
 dynamic range that a flat 8-bit scale doesn't have.
+
+Note what the block does *not* carry: any kind of frame marker. Blocks are
+fixed-size, so a consumer that knows where one starts knows where all of them
+start — and most transports (files, WebSocket messages, UDP datagrams,
+AXI-Stream with TLAST) already delimit. If yours doesn't — raw DMA, a byte pipe,
+a consumer joining mid-stream — [STREAMING.md](STREAMING.md) gives two optional
+ways to add sync and what each costs. It's an add-on; nothing on this page
+changes.
 
 ## Encoding
 
@@ -321,6 +329,17 @@ Where block scaling does earn its place: high-peak-to-average wideband IQ
 small samples. If that's your data, benchmark a *faithful* (scale-quantized)
 block scaling against tuned BFP on your own captures before committing to the
 costlier decode.
+
+## Recording it to a file
+
+This page describes the codec. If you want to *store* BFP rather than stream it,
+[**biq-format**](https://github.com/ibelinp/biq-format) is a 64-byte header and
+an optional JSON blob wrapped around exactly these blocks, unchanged — one
+codec, two transports. Holding the block geometry fixed for a whole file buys
+constant-time seek with no index, an amplitude envelope readable from the
+exponent bytes alone, and a file that survives a recorder dying mid-write. It
+ships a header-only C++ reference and a converter to and from WAV, SigMF and
+raw `cs16`.
 
 ## Reference implementation
 
